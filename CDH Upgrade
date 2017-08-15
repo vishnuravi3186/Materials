@@ -31,9 +31,9 @@ Change location accordingly if there is no space location is at "/opt/cloudera/d
 
 Example copy the fsimage of name node - primary and secondary
 cd /hadoop/dfs/nn
-tar -cvzf /tmp/edhden1222_nn_backup.tar.gz current
+tar -cvzf /tmp/nn1_backup.tar.gz current
 cd /hadoop/dfs/nn
-tar -cvzf /tmp/edhden1221_nn_backup.tar.gz current
+tar -cvzf /tmp/nn2_backup.tar.gz current
 
 Download RPMS for upgrading Cloudera Manager Server, Cloudera Manager Agents, KeyTrustee Server (optional)
 
@@ -46,7 +46,7 @@ gpgcheck = 0
 
 Download package from:  archive.cloudera.com/cm5/repo-as-tarball
 Find out the 5.9.1 version tarball. http://archive.cloudera.com/cm5/repo-as-tarball/5.9.1/cm5.9.1-centos6.tar.gz
-Unzip to edhden1220:/var/www/html/cm591/
+Unzip to cm:/var/www/html/cm591/
  # chmod 775 /var/www/html/cm591
 Run "yum list" and make sure you can see 591 rpms for cloudera
 
