@@ -1,0 +1,6 @@
+CM GUI -> Clusters -> -> Dynamic Resource Pool Configuration
+For “Resources Pools” Tab, find total number of vcores and memory in the context. In cluster, it is 288 vcores and 288G memory total.
+Calculate the number. 50% of total and memory are 144 vcores / 144 Gib memory
+Edit “root -> default” pool and modify “Virtual Cores Max” & “Virtual Core Min”
+If policy has multiple configuration set, modify all of them. For example, in Preprod default pool, you will see “default”, “day”, “night”, weekends” for different time slots.
+Save and refresh configuration.
