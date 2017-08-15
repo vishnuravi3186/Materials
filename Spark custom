@@ -1,0 +1,16 @@
+make a user copy of the config files
+
+mkdir ~/etc/
+mkdir ~/etc/hadoop
+mkdir ~/etc/hive
+mkdir ~/etc/hadoop/conf
+mkdir ~/etc/hive/conf
+
+hdfs dfs -copyToLocal /user/xxxx/cdh/* ~/etc/hadoop/conf/
+cp /etc/alternatives/hive-conf/* ~/etc/hive/conf/
+.bashrc
+
+export YARN_CONF_DIR=$HOME/etc/hadoop/conf
+export HADOOP_CONF_DIR=$HOME/etc/hive/conf
+for core-site.xml annd hdfs-site.xml in both hadoop and hive directories (4 files total):
+Edit KMS if you have two.
