@@ -1,0 +1,113 @@
+Cloudera Upgrade Documentation External Link
+#https://www.cloudera.com/documentation/enterprise/5-9-x/topics/cm_ag_ug_cm5.html#cm_ug_pre_upgrade
+
+
+Prepare work checklist.
+Collect cluster information
+Backup Name Node fsimage
+Download and setup CM repo
+Download CDH parcels and Key Trustee Server (If enabled)
+Full backup of Mysql DB.
+
+Upgrade work flow.
+On CM Server, service cloudera-scm-server stop; service cloudera-scm-agent stop
+Upgrade by "yum upgrade cloudera-manager-server -y" on CM. It will also cloudera-manager-agent as well
+service cloudera-scm-server restart; service cloudera-scm-agent restart
+Login to CM GUI and follow instruction to upgrade agents on all hosts.
+Restart CM Service.
+Upgrade CDH stack via Parcels
+Upgrade KTS via Parcels
+Validation and release
+
+Backup necessary information
+
+Backup mysql database on the Cloudera Manager server. ( xxx CM,  xxxxx Navigator)
+mysqldump -u root -p --all-databases --single-transaction > /opt/cloudera/mysql_backup/mysql_backup_all_<date>.sql
+gzip /opt/cloudera/mysql_backup/mysql_backup_all_<date>.sql
+
+ Login to Name Nodes  ( nn1, nn2 ) and backup information
+To find out path, go to CM -> HDFS -> Configuration -> search "fsimage"
+Change location accordingly if there is no space location is at "/opt/cloudera/dfs/nn/".
+
+Example copy the fsimage of name node - primary and secondary
+cd /hadoop/dfs/nn
+tar -cvzf /tmp/edhden1222_nn_backup.tar.gz current
+cd /hadoop/dfs/nn
+tar -cvzf /tmp/edhden1221_nn_backup.tar.gz current
+
+Download RPMS for upgrading Cloudera Manager Server, Cloudera Manager Agents, KeyTrustee Server (optional)
+
+Setup Repo on the CM server.
+[root@cmserver parcel-repo]# cat /etc/yum.repos.d/cloudera-manager591.repo 
+[cloudera-manager591]
+name = Cloudera Manager, Version 5.9.1
+baseurl = http://cmserver/cm591/5/
+gpgcheck = 0
+
+Download package from:  archive.cloudera.com/cm5/repo-as-tarball
+Find out the 5.9.1 version tarball. http://archive.cloudera.com/cm5/repo-as-tarball/5.9.1/cm5.9.1-centos6.tar.gz
+Unzip to edhden1220:/var/www/html/cm591/
+ # chmod 775 /var/www/html/cm591
+Run "yum list" and make sure you can see 591 rpms for cloudera
+
+[root@nn1 html]# yum list|grep -i cloud
+cloudera-manager-agent.x86_64          5.8.4-1.cm584.p0.5.el6      @cloudera-584
+cloudera-manager-daemons.x86_64        5.8.4-1.cm584.p0.5.el6      @cloudera-584
+cloudera-manager-server.x86_64         5.8.4-1.cm584.p0.5.el6      @cloudera-584
+cloudera-manager-agent.x86_64          5.9.1-1.cm591.p0.8.el6      cloudera-manager591
+cloudera-manager-daemons.x86_64        5.9.1-1.cm591.p0.8.el6      cloudera-manager591
+cloudera-manager-server.x86_64         5.9.1-1.cm591.p0.8.el6      cloudera-manager591
+cloudera-manager-server-db-2.x86_64    5.9.1-1.cm591.p0.8.el6      cloudera-manager591
+enterprise-debuginfo.x86_64            5.9.1-1.cm591.p0.8.el6      cloudera-manager591
+
+
+Copy Parcels into the Parcel location. it is <cm server>:/opt/cloudera/parcel-repo
+Refresh in Cloudera Parcel and make sure they shows up as available.
+CDH-5.9.1-1.cdh5.9.1.p0.4-el6.parcel
+CDH-5.9.1-1.cdh5.9.1.p0.4-el6.parcel.sha
+CDH-5.9.1-1.cdh5.9.1.p0.4-el6.parcel.torrent
+KEYTRUSTEE_SERVER-5.9.0-1.keytrustee5.9.0.p0.12-el6.parcel
+KEYTRUSTEE_SERVER-5.9.0-1.keytrustee5.9.0.p0.12-el6.parcel.sha
+
+Perform upgrade. 
+
+service cloudera-scm-server stop; service cloudera-scm-agent stop
+yum upgrade cloudera-manager-server -y
+service cloudera-scm-server restart; service cloudera-scm-agent restart
+Login to GUI and follow instruction to upgrade agents on all hosts.
+Note: If the GUI doesn't show up, you can go to "Hosts" - "Rerun Upgrade Agent" 
+-> Custom Repository “http://nn1/cm591/5/“
+-> Don’t check JDK installation
+-> ssh root , Copy private key file from ~/.ssh/id_rsa into local and select it, Change “simutaneous” to higher if needed.
+Restart Cloudera Management Service
+Install Parcels for KTS 5.9.1 through CM -> Parcels
+
+Test after upgrade
+
+Test HDFS
+hdfs -dfs ls /tmp
+hdfs -dfs -put /etc/hosts 
+hdfs -dfs -ls
+hdfs -dfs -cat hosts
+
+Test YARN
+cd /opt/cloudera/parcels/CDH/lib/hadoop-mapreduce/
+hadoop jar hadoop-mapreduce-examples.jar pi 10 100
+
+Test Spark on YARN
+cd /opt/cloudera/parcels/CDH/lib/spark/lib
+spark-submit --class org.apache.spark.examples.SparkPi --deploy-mode cluster --master yarn spark-examples.jar 10
+
+Issues:
+
+While upgrading cloudera-scm-agent, one of the host cannot upgrade cm-agent rpm. 
+Error: rpmdb open failed 
+
+Source: google
+mkdir /root/backups.rpm.mm_dd_yyyy/
+cp -avr /var/lib/rpm/ /root/backups.rpm.mm_dd_yyyy/
+To fix this problem, try:
+# rm -f /var/lib/rpm/__db*
+# db_verify /var/lib/rpm/Packages
+# rpm --rebuilddb
+# yum clean all
